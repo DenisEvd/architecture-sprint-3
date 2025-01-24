@@ -1,0 +1,50 @@
+@startuml
+!include C4_Component.puml
+
+title Component diagram for Smart House Service
+
+Person(webClient, "Web Client")
+Person(mobileClient, "Mobile Client")
+
+System_Boundary(smartHouseService, "Smart House Service") {
+    Container(apiGateway, "API Gateway", "Distributes requests between microservices")
+
+    Container_Boundary(userService, "User Service") {
+        Component(userAPI, "API")
+        Component(profileManager, "Profile Manager", "CRUD component for working with profile")
+        Component(paymentsPageManager, "Payments Page Manager", "Payment, subscription and quota Monitoring Manager")
+    }
+
+    Container_Boundary(paymentService, "PaymentService") {
+        Component(paymentAPI, "API")
+        Component(paymentDetailsManager, "Payment Details Manager", "Stores payment details")
+        Component(transactionManager, "Transaction Manager", "Transaction Manager for working with external banking service")
+    }
+
+    ContainerDb(paymentDb, "PostgreSQL")
+    ContainerDb(userDb, "PostgreSQL")
+    ContainerDb(userPaymentsQueue, "Apache Kafka")
+}
+
+System_Ext(bankingService, "External Banking Service", "External banking service for deal with payments")
+
+Rel(webClient, apiGateway, "", "HTTP")
+Rel(mobileClient, apiGateway, "", "HTTP")
+
+Rel(apiGateway, userAPI, "Add user, edit profile, add payment method", "HTTP")
+
+Rel(userAPI, profileManager, "Create, edit, delete profile")
+Rel(profileManager, userDb, "Store profile data")
+Rel(userAPI, paymentsPageManager, "Get payments stat")
+Rel(paymentsPageManager, userDb, "Store payments data")
+Rel(paymentsPageManager, paymentAPI, "Add payment details")
+Rel(paymentsPageManager, userPaymentsQueue, "Send payment req")
+
+Rel(paymentAPI, paymentDetailsManager, "CRUD for payment preferences")
+Rel(paymentDetailsManager, paymentDb, "Store data")
+Rel(transactionManager, paymentDetailsManager, "Get details")
+Rel(transactionManager, userPaymentsQueue, "Read requests")
+Rel(transactionManager, bankingService, "Begin transaction, get transaction state, rollback transaction")
+Rel(transactionManager, paymentDb, "Store transactions history")
+
+@enduml

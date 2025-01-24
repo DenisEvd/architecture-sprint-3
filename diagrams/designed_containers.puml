@@ -1,0 +1,79 @@
+@startuml
+!include C4_Container.puml
+
+title Container diagram for Smart House Service
+
+Person(webClient, "Web Client")
+Person(mobileClient, "Mobile Client")
+
+System_Boundary(smartHouseService, "Smart House Service") {
+    Container(apiGateway, "API Gateway", "Distributes requests between microservices")
+
+    Container(userService, "User Service", "Stores data about user profile and IDs of user's devices")
+    ContainerDb(userDb, "PostgreSQL")
+    ContainerDb(userPaymentsQueue, "Apache Kafka")
+    Container(paymentService, "PaymentService", "Stores payment details and monitors the payment")
+    ContainerDb(paymentDb, "PostgreSQL")
+
+    Container(heatingService, "Heating Service", "Stores data about heaters and controls devices statuses via specific protocols")
+    ContainerDb(heatingDb, "PostgreSQL")
+    Container(temperatureService, "Temperature Service", "Fetches and processes data from sensors, asynchronously sends it to the heating service")
+    ContainerDb(temperatureDb, "PostgreSQL")
+    ContainerDb(heatingTemperatureQueue, "Apache Kafka")
+
+    Container(lightService, "Light Service", "Stores data about lighting devices and controls devices statuses via specific protocols")
+    ContainerDb(lightDb, "PostgreSQL")
+
+    Container(gateService, "Gate Service", "Stores data about smart gates and controls devices statuses via specific protocols")
+    ContainerDb(gateDb, "PostgreSQL")
+
+    Container(cameraService, "Camera Service", "Stores data about video recording devices and controls devices statuses via specific protocols")
+    ContainerDb(cameraDb, "PostgreSQL")
+    Container(videoService, "Video Service", "Fetches, stores and process recorded videos")
+    ContainerDb(videoDb, "S3")
+}
+
+System_Ext(bankingService, "External Banking Service", "External banking service for deal with payments")
+System_Ext(temperatureSensor, "Temperature Sensor", "Temperature sensor in client's houses")
+System_Ext(lightingDevice, "Lighting Device", "Light devices in client's houses")
+System_Ext(videoRecordingDevice, "Video recording device", "Video recording devices in client's houses")
+System_Ext(smartGate, "Smart Gate", "Client's smart gates")
+
+Rel(webClient, apiGateway, "", "HTTP")
+Rel(mobileClient, apiGateway, "", "HTTP")
+
+Rel(apiGateway, userService, "Add user, edit profile, add payment method", "HTTP")
+Rel(apiGateway, heatingService, "Add new device, turn on, turn off, set temperature, get stat, remove device", "HTTP")
+Rel(apiGateway, lightService, "Add new device, turn on, turn off, set color, set turn off timer, get stat, remove device", "HTTP")
+Rel(apiGateway, gateService, "Add new device, open, close, set auto close delay, remove device", "HTTP")
+Rel(apiGateway, cameraService, "Add new device, turn on, turn off, set device mode, get stat, remove device","HTTP")
+Rel(apiGateway, videoService, "Watch video, download video, set video TTL", "HTTP")
+
+Rel(userService, userDb, "")
+Rel(userService, paymentService, "Add payment details and check payments", "HTTP")
+Rel(userService, userPaymentsQueue, "Send payment request")
+Rel(paymentService, paymentDb, "")
+Rel(paymentService, userPaymentsQueue, "Read requests")
+Rel(paymentService, bankingService, "Begin transaction, get transaction state, rollback transaction", "HTTP")
+
+Rel(heatingService, heatingDb, "")
+Rel(heatingService, temperatureSensor, "Turn on, turn off, change settings", "HTTP")
+Rel(heatingService, temperatureService, "Add sensor", "HTTP")
+Rel(heatingService, heatingTemperatureQueue, "Read current temperature updates")
+Rel(temperatureService, heatingTemperatureQueue, "Send current temperature updates")
+Rel(temperatureService, temperatureDb, "")
+Rel(temperatureService, temperatureSensor, "Fetch temperature stats", "HTTP")
+
+Rel(lightService, lightDb, "")
+Rel(lightService, lightingDevice, "Turn on, turn off, change settings", "HTTP")
+
+Rel(gateService, gateDb, "")
+Rel(gateService, smartGate, "Open, close, change settings", "HTTP")
+
+Rel(cameraService, cameraDb, "")
+Rel(cameraService, videoRecordingDevice, "Turn on, turn off, change settings", "HTTP")
+Rel(cameraService, videoService, "Add devices to fetch videos", "HTTP")
+Rel(videoService, videoDb, "")
+Rel(videoService, videoRecordingDevice, "Fetch chunks of recorded videos", "HTTP")
+
+@enduml
