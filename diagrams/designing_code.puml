@@ -1,0 +1,42 @@
+@startuml
+
+class TransactionService {
+    queueClient: KafkaClient
+    bankingClient: BankingClient
+    repo: TransactionStatusRepo
+
+    detailsService: PaymentDetailsService
+}
+
+class KafkaClient {
+    host: string
+    port: int
+    topic_name: string
+    group_name: string
+}
+
+class BankingClient {
+    banking_host: string
+    banking_port: int
+    transactions_in_progress: string[]
+}
+
+class TransactionStatusRepo {
+    pg_client: PgClient
+}
+
+class PaymentDetailsService {}
+
+class Transaction {
+    tx_id: string
+    status: string
+}
+
+TransactionService ||--|{KafkaClient  : "Get requests to process"
+TransactionService ||--|{BankingClient  : "Begin tx, check tx status, rollback tx"
+TransactionService ||--|{TransactionStatusRepo : "Store transaction result status"
+TransactionService ||--|{PaymentDetailsService : "Get requisites"
+
+
+
+@enduml

@@ -1,0 +1,165 @@
+@startuml
+
+entity User {
+    id : UUID
+    name: string
+    email: string
+    created_at: datetime
+    updated_at: datetime
+}
+
+entity UserDeviceQuota {
+    user_id: UUID
+    added_device_count: integer
+    device_quota: integer
+
+    balance: integer
+}
+
+entity PaymentDetails {
+    user_id: UUID
+    card_id: string
+    card_owner: string
+}
+
+entity Transactions {
+    id: UUID
+    user_id: UUID
+
+    status: string
+
+    created_at: datetime
+    finish_at: datetime
+}
+
+entity UserHouse {
+    user_id: UUID
+    id: UUID
+    address: string
+}
+
+entity HouseDevice {
+    house_id: UUID
+    device_id: UUID
+}
+
+entity HeatingDevice {
+    id: UUID
+    name: string
+    is_on: bool
+    current_temperature: float
+    temperature_limit: float
+
+    host: string
+    port: integer
+
+    created_at: datetime
+    updated_at: datetime
+}
+
+entity TemperatureSensor {
+    id: UUID
+    name: string
+    is_on: bool
+
+    host: string
+    port: integer
+
+    fetch_frequency: integer
+
+    created_at: datetime
+    updated_at: datetime
+}
+
+entity TemperatureStat {
+    sensor_id: UUID
+    temperature: float
+    created_at: datetime
+}
+
+entity LightingDevice {
+    id: UUID
+    name: string
+    is_on: bool
+    color: string
+    brightness: float
+
+    turn_off_delay: integer
+
+    host: string
+    port: integer
+
+    created_at: datetime
+    updated_at: datetime
+}
+
+entity GateDevice {
+    id: UUID
+    name: string
+    is_closed: bool
+
+    auto_close_delay: integer
+
+    host: string
+    port: integer
+
+    created_at: datetime
+    updated_at: datetime
+}
+
+entity CameraDevice {
+    id: UUID
+    name: string
+    is_on: bool
+    recording_mode: string
+
+    host: string
+    port: integer
+
+    created_at: datetime
+    updated_at: datetime
+}
+
+entity VideoSource {
+    id: UUID
+    camera_id: UUID
+    name: string
+    is_on: bool
+
+    host: string
+    port: integer
+
+    created_at: datetime
+    updated_at: datetime
+}
+
+entity VideoFile {
+    id: UUID
+    source_id: UUID
+    file_path: string
+    duration: integer
+
+    ttl: integer
+
+    created_at: datetime
+}
+
+User "1"--"*" PaymentDetails : "user_id"
+User "1"--"1" UserDeviceQuota : "user_id"
+User "1"--"*" Transactions : "user_id"
+
+User "1"--"*" UserHouse : "user_id"
+UserHouse "1"--"*" HouseDevice : "house_id"
+
+HouseDevice "1"--"1" HeatingDevice : "device_id"
+HouseDevice "1"--"1" TemperatureSensor : "device_id"
+HouseDevice "1"--"1" LightingDevice : "device_id"
+HouseDevice "1"--"1" GateDevice : "device_id"
+HouseDevice "1"--"1" CameraDevice : "device_id"
+
+TemperatureSensor "1"--"*" TemperatureStat : "sensor_id"
+
+CameraDevice "1"--"1" VideoSource : "camera_id"
+VideoSource "1"--"*" VideoFile : "sensor_id"
+
+@enduml

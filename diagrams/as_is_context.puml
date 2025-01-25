@@ -1,0 +1,13 @@
+@startuml
+!include C4_Context.puml
+
+Person(client, "Client")
+
+System(heatingHomeMonolith, "Heating Home Monolith", "Fetches data from devices and monitors temperature in smart home", "some")
+
+System_Ext(sensor, "Sensor", "Temperature sensor in home")
+
+ Rel(client, heatingHomeMonolith, "Uses")
+ Rel(heatingHomeMonolith, sensor, "Fetches data")
+
+@enduml
