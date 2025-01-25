@@ -34,6 +34,7 @@ System_Boundary(smartHouseService, "Smart House Service") {
 }
 
 System_Ext(bankingService, "External Banking Service", "External banking service for deal with payments")
+System_Ext(smartHeater, "Smart Heater", "Client's heater")
 System_Ext(temperatureSensor, "Temperature Sensor", "Temperature sensor in client's houses")
 System_Ext(lightingDevice, "Lighting Device", "Light devices in client's houses")
 System_Ext(videoRecordingDevice, "Video recording device", "Video recording devices in client's houses")
@@ -60,6 +61,7 @@ Rel(heatingService, heatingDb, "")
 Rel(heatingService, temperatureSensor, "Turn on, turn off, change settings", "HTTP")
 Rel(heatingService, temperatureService, "Add sensor", "HTTP")
 Rel(heatingService, heatingTemperatureQueue, "Read current temperature updates")
+Rel(heatingService, smartHeater, "Turn on/off, change settings", "HTTP")
 Rel(temperatureService, heatingTemperatureQueue, "Send current temperature updates")
 Rel(temperatureService, temperatureDb, "")
 Rel(temperatureService, temperatureSensor, "Fetch temperature stats", "HTTP")

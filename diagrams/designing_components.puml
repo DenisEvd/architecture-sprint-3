@@ -14,24 +14,74 @@ System_Boundary(smartHouseService, "Smart House Service") {
         Component(profileManager, "Profile Manager", "CRUD component for working with profile")
         Component(paymentsPageManager, "Payments Page Manager", "Payment, subscription and quota Monitoring Manager")
     }
-
     Container_Boundary(paymentService, "PaymentService") {
         Component(paymentAPI, "API")
         Component(paymentDetailsManager, "Payment Details Manager", "Stores payment details")
         Component(transactionManager, "Transaction Manager", "Transaction Manager for working with external banking service")
     }
-
     ContainerDb(paymentDb, "PostgreSQL")
     ContainerDb(userDb, "PostgreSQL")
     ContainerDb(userPaymentsQueue, "Apache Kafka")
+
+    Container_Boundary(heatingService, "Heating Service") {
+        Component(heatingAPI, "API")
+        Component(heatingDeviceManager, "Heating Device Manager", "CRUD for heating devices")
+        Component(heatingDeviceClient, "Heating Device Client", "Client for working with different heaters protocols to turn on/off")
+    }
+    Container_Boundary(temperatureService, "Temperature Service") {
+        Component(temperatureAPI, "API")
+        Component(statSourcesManager, "Stat Sources Manager", "CRUD for temperature sensors")
+        Component(temperatureFetcher, "Temperature Fetcher", "Fetches data from all sensors and stores it into DB")
+    }
+    ContainerDb(heatingDb, "PostgreSQL")
+    ContainerDb(temperatureDb, "PostgreSQL")
+    ContainerDb(heatingTemperatureQueue, "Apache Kafka")
+
+    Container_Boundary(lightService, "Light Service") {
+        Component(lightAPI, "API")
+        Component(lightingDeviceManager, "Lighting Device Manager", "CRUD for lighting devices")
+        Component(lightingDeviceClient, "Lighting Device Client", "Client for working with different lighting devices protocols to turn on/off")
+    }
+    ContainerDb(lightDb, "PostgreSQL")
+
+    Container_Boundary(gateService, "Gate Service") {
+        Component(gateAPI, "API")
+        Component(gateManager, "Gate Manager", "CRUD for gates")
+        Component(gateClient, "Gate Client", "Client for working with different smart gates protocols to turn on/off and change settings")
+    }
+    ContainerDb(gateDb, "PostgreSQL")
+
+    Container_Boundary(cameraService, "Camera Service") {
+        Component(cameraAPI, "API")
+        Component(cameraManager, "Camera Manager", "CRUD for video recording devices")
+        Component(cameraClient, "Camera Client", "Client for working with different video recording devices protocols to turn on/off and change settings")
+    }
+    Container_Boundary(videoService, "Video Service") {
+        Component(videoAPI, "API")
+        Component(videoSourcesManager, "Video Sources Manager", "CRUD for video sources")
+        Component(videoFetcher, "Video Fetcher", "Fetches video chunks from all source and stores it into S3")
+    }
+    ContainerDb(cameraDb, "PostgreSQL")
+    ContainerDb(videoDb, "PostgreSQL")
+    ContainerDb(videoDbS3, "S3")
 }
 
 System_Ext(bankingService, "External Banking Service", "External banking service for deal with payments")
+System_Ext(smartHeater, "Smart Heater", "Client's heater")
+System_Ext(temperatureSensor, "Temperature Sensor", "Temperature sensor in client's houses")
+System_Ext(lightingDevice, "Lighting Device", "Light devices in client's houses")
+System_Ext(videoRecordingDevice, "Video recording device", "Video recording devices in client's houses")
+System_Ext(smartGate, "Smart Gate", "Client's smart gates")
 
 Rel(webClient, apiGateway, "", "HTTP")
 Rel(mobileClient, apiGateway, "", "HTTP")
 
 Rel(apiGateway, userAPI, "Add user, edit profile, add payment method", "HTTP")
+Rel(apiGateway, heatingAPI, "Add new device, turn on, turn off, set temperature, get stat, remove device", "HTTP")
+Rel(apiGateway, lightAPI, "Add new device, turn on, turn off, set color, set turn off timer, get stat, remove device", "HTTP")
+Rel(apiGateway, gateAPI, "Add new device, open, close, set auto close delay, remove device", "HTTP")
+Rel(apiGateway, cameraAPI, "Add new device, turn on, turn off, set device mode, get stat, remove device","HTTP")
+Rel(apiGateway, videoAPI, "Watch video, download video, set video TTL", "HTTP")
 
 Rel(userAPI, profileManager, "Create, edit, delete profile")
 Rel(profileManager, userDb, "Store profile data")
@@ -46,5 +96,41 @@ Rel(transactionManager, paymentDetailsManager, "Get details")
 Rel(transactionManager, userPaymentsQueue, "Read requests")
 Rel(transactionManager, bankingService, "Begin transaction, get transaction state, rollback transaction")
 Rel(transactionManager, paymentDb, "Store transactions history")
+
+Rel(heatingDeviceManager, heatingDb, "Store data about devices")
+Rel(heatingAPI, heatingDeviceManager, "Handle CRUD requests")
+Rel(heatingAPI, heatingDeviceClient, "Handle turn on/off, change settings requests")
+Rel(heatingDeviceManager, heatingTemperatureQueue, "Read temperature data")
+Rel(heatingDeviceManager, temperatureAPI, "Add, remove sensor")
+Rel(heatingDeviceClient, heatingDeviceManager, "Get data")
+Rel(heatingDeviceClient, smartHeater, "Turn on/off, change settings")
+Rel(temperatureAPI, statSourcesManager, "Add, remove sensor")
+Rel(statSourcesManager, temperatureDb, "Store data")
+Rel(temperatureFetcher, statSourcesManager, "Get sources list")
+Rel(temperatureFetcher, temperatureSensor, "Fetch temperature")
+Rel(temperatureFetcher, heatingTemperatureQueue, "Send temperature stat")
+
+Rel(lightAPI, lightingDeviceManager, "Handle requests")
+Rel(lightingDeviceManager, lightDb, "Store data about devices")
+Rel(lightingDeviceManager, lightingDeviceClient, "Work with devices")
+Rel(lightingDeviceClient, lightingDeviceManager, "Get devices data")
+Rel(lightingDeviceClient, lightingDevice, "Turn on/off, change settings")
+
+Rel(gateAPI, gateManager, "Handle requests")
+Rel(gateManager, gateDb, "Store data about gates")
+Rel(gateManager, gateClient, "Work with smart gates")
+Rel(gateClient, gateManager, "Get gates data")
+Rel(gateClient, smartGate, "Turn on/off, change settings")
+
+Rel(cameraAPI, cameraManager, "Handle requests")
+Rel(cameraManager, cameraDb, "Store data")
+Rel(cameraManager, cameraClient, "Work with cameras")
+Rel(cameraManager, videoAPI, "Add new video sources")
+Rel(cameraClient, videoRecordingDevice, "Turn on/off, change settings")
+Rel(videoAPI, videoSourcesManager, "Handle requests")
+Rel(videoSourcesManager, videoDb, "Store data about sources")
+Rel(videoSourcesManager, videoFetcher, "Update sources list")
+Rel(videoFetcher, videoRecordingDevice, "Fetch video chunks")
+Rel(videoFetcher, videoDbS3, "Store videos")
 
 @enduml
